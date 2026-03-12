@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Magic Anvil Simulator</title>
+  <meta name="description" content="Upgrade anvil simulator" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="anvil-app">
+    <section class="left-panel">
+      <div class="search-card">
+        <div class="search-card__title">ITEM ARA</div>
+
+        <div class="search-box">
+          <input
+            type="search"
+            id="itemSearchInput"
+            placeholder="Item adı yaz..."
+            autocomplete="off"
+          />
+        </div>
+
+        <div class="search-results" id="searchResults"></div>
+      </div>
+
+      <div class="preview-card" id="previewCard">
+        <div class="preview-card__title">ITEM ÖNİZLEME</div>
+        <div class="preview-empty" id="previewEmpty">Bir item seç.</div>
+
+        <div class="preview-content hidden" id="previewContent">
+          <div class="preview-icon" id="previewIcon"></div>
+          <div class="preview-name" id="previewName"></div>
+          <div class="preview-level">Başlangıç seviyesi: +1</div>
+          <button class="action-btn action-btn--gold" id="addToInventoryBtn">
+            ENVANTERE EKLE
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <section class="right-panel">
+      <div class="forge-card">
+        <div class="forge-card__title">UPGRADE ANVIL</div>
+
+        <div class="forge-layout">
+          <div class="forge-flow">
+            <div class="forge-column">
+              <div class="slot-title">ITEM</div>
+              <div class="forge-slot forge-slot--item" id="inputItemSlot"></div>
+            </div>
+
+            <div class="forge-column forge-column--materials">
+              <div class="material-row">
+                <div>
+                  <div class="slot-title">BUS</div>
+                  <div class="forge-slot forge-slot--small" id="busSlot"></div>
+                </div>
+
+                <div>
+                  <div class="slot-title">TRINA</div>
+                  <div class="forge-slot forge-slot--small" id="trinaSlot"></div>
+                </div>
+              </div>
+
+              <div class="forge-actions">
+                <button class="action-btn" id="placeBusBtn">BUS KOY</button>
+                <button class="action-btn" id="placeTrinaBtn">TRINA KOY</button>
+                <button class="action-btn action-btn--gold" id="upgradeBtn">UPGRADE</button>
+                <button class="action-btn action-btn--dark" id="clearForgeBtn">TEMİZLE</button>
+              </div>
+            </div>
+
+            <div class="forge-column">
+              <div class="slot-title">ÇIKIŞ</div>
+              <div class="forge-slot forge-slot--item" id="outputItemSlot"></div>
+            </div>
+          </div>
+
+          <div class="effect-layer">
+            <div class="effect effect--success" id="successEffect"></div>
+            <div class="effect effect--fail" id="failEffect"></div>
+          </div>
+        </div>
+
+        <div class="status-box">
+          <div class="status-text" id="statusText">Bir item seçip envantere ekle.</div>
+          <div class="rate-text" id="rateText">Başarı oranı: -</div>
+        </div>
+      </div>
+
+      <div class="inventory-card">
+        <div class="inventory-card__title">ENVANTER</div>
+        <div class="inventory-grid" id="inventoryGrid"></div>
+      </div>
+    </section>
+  </main>
+
+  <script src="items.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

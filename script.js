@@ -326,7 +326,7 @@ function renderInventory() {
 
       slot.appendChild(icon);
       slot.appendChild(createLevelTag(item.level));
-      slot.appendChild(createClassTag(item.itemClass));
+      
     }
 
     inventoryGrid.appendChild(slot);

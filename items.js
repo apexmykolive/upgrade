@@ -7,7 +7,7 @@ const ITEM_DATABASE = [
   { id: "glave", name: "Glave", icon: "img/itemicon/glave.png", maxUpgrade: 10 },
   { id: "totemic_spear", name: "Totemic Spear", icon: "img/itemicon/totemicspear.png", maxUpgrade: 10 },
   { id: "ii", name: "Impact", icon: "img/itemicon/impact.png", maxUpgrade: 10 },
-  { id: "hb", name: "Chitin Shield", icon: "img/itemicon/cs.png", maxUpgrade: 10 },
+  { id: "hb", name: "Chitin Shield", icon: "img/itemicon/chitinshield.png", maxUpgrade: 10 },
   { id: "giga", name: "Gigantic Axea", icon: "img/itemicon/gigahammer.png", maxUpgrade: 10 },
   { id: "elixir_staff", name: "Elixir Staff", icon: "img/itemicon/elixirstaff.png", maxUpgrade: 10 },
   { id: "elixir_bow", name: "Chitin Bow", icon: "img/itemicon/elixirbow.png", maxUpgrade: 10 },

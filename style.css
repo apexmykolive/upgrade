@@ -18,9 +18,7 @@ body {
   color: var(--text);
   background:
     radial-gradient(circle at 50% 25%, rgba(255, 170, 70, 0.12), transparent 18%),
-    linear-gradient(rgba(8, 9, 14, 0.7), rgba(8, 9, 14, 0.82)),
-    url("img/background/1.jpg") no-repeat center center fixed;
-  background-size: cover;
+    linear-gradient(rgba(8, 9, 14, 0.55), rgba(8, 9, 14, 0.72));
   overflow-x: hidden;
 }
 
@@ -317,4 +315,20 @@ button:disabled { opacity: .55; cursor: not-allowed; }
   .anvil-app { grid-template-columns: 1fr; }
   .forge-flow { grid-template-columns: 1fr; }
   .material-row { justify-content: center; }
+}
+body::before{
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.30);
+  z-index: -1;
+  pointer-events: none;
+}
+#bg-video{
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  object-fit: cover;
+  z-index: -2;
 }

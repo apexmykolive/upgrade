@@ -328,7 +328,7 @@ body {
   height: 72px;
   transform: none;
 }
-}
+
 
 .inventory-item.is-disabled {
   opacity: 0.28;

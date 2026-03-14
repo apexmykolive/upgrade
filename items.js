@@ -7,16 +7,12 @@ const ITEM_DATABASE = [
   { id: "glave", name: "Glave", icon: "img/itemicon/glave.png", maxUpgrade: 10 },
   { id: "totemic_spear", name: "Totemic Spear", icon: "img/itemicon/totemicspear.png", maxUpgrade: 10 },
   { id: "ii", name: "Impact", icon: "img/itemicon/impact.png", maxUpgrade: 10 },
-  { id: "hb", name: "Hanguk Sword", icon: "img/itemicon/hanguksword.png", maxUpgrade: 10 },
-  { id: "giga", name: "Giga Hammer", icon: "img/itemicon/gigahammer.png", maxUpgrade: 10 },
+  { id: "hb", name: "Chitin Shield", icon: "img/itemicon/cs.png", maxUpgrade: 10 },
+  { id: "giga", name: "Gigantic Axea", icon: "img/itemicon/gigahammer.png", maxUpgrade: 10 },
   { id: "elixir_staff", name: "Elixir Staff", icon: "img/itemicon/elixirstaff.png", maxUpgrade: 10 },
-  { id: "elixir_bow", name: "Elixir Bow", icon: "img/itemicon/elixirbow.png", maxUpgrade: 10 },
-  { id: "elixir_dagger", name: "Elixir Dagger", icon: "img/itemicon/elixirdagger.png", maxUpgrade: 10 },
-  { id: "elixir_sword", name: "Elixir Sword", icon: "img/itemicon/elixirsword.png", maxUpgrade: 10 },
+  { id: "elixir_bow", name: "Chitin Bow", icon: "img/itemicon/elixirbow.png", maxUpgrade: 10 },
+  
+  
   { id: "md", name: "Mirage Dagger", icon: "img/itemicon/miragedagger.png", maxUpgrade: 10 },
-  { id: "smite", name: "Smite Hammer", icon: "img/itemicon/smitehammer.png", maxUpgrade: 10 },
-  { id: "srebow", name: "Silver Earring Bow", icon: "img/itemicon/srebow.png", maxUpgrade: 10 },
-  { id: "chaos_blade", name: "Chaos Blade", icon: "img/itemicon/chaosblade.png", maxUpgrade: 10 },
-  { id: "wirinom", name: "Wirinom", icon: "img/itemicon/wirinom.png", maxUpgrade: 10 },
-  { id: "glass_belt", name: "Glass Belt", icon: "img/itemicon/glassbelt.png", maxUpgrade: 10 }
+ 
 ];

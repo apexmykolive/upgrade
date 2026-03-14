@@ -1,157 +1,571 @@
 const UPGRADE_RATES = Object.freeze({
-  low:{
-    normal:{1:100,2:100,3:80,4:70,5:40,6:8,7:2.5},
-    trina:{1:100,2:100,3:100,4:85,5:60,6:17.5,7:10}
-  },
-  middle:{
-    normal:{1:100,2:100,3:80,4:60,5:40,6:8,7:3,8:0},
-    trina:{1:100,2:100,3:100,4:80,5:55,6:15,7:5,8:0}
-  },
-  high:{
-    normal:{1:100,2:100,3:75,4:55,5:30,6:2.75,7:0},
-    trina:{1:100,2:100,3:100,4:75,5:42,6:4.5,7:0}
-  }
+  low: Object.freeze({
+    normal: Object.freeze({
+      1: 100,
+      2: 100,
+      3: 80,
+      4: 70,
+      5: 40,
+      6: 8,
+      7: 2.5
+    }),
+    trina: Object.freeze({
+      1: 100,
+      2: 100,
+      3: 100,
+      4: 85,
+      5: 60,
+      6: 17.5,
+      7: 10
+    })
+  }),
+  middle: Object.freeze({
+    normal: Object.freeze({
+      1: 100,
+      2: 100,
+      3: 80,
+      4: 60,
+      5: 40,
+      6: 8,
+      7: 3,
+      8: 0
+    }),
+    trina: Object.freeze({
+      1: 100,
+      2: 100,
+      3: 100,
+      4: 80,
+      5: 55,
+      6: 15,
+      7: 5,
+      8: 0
+    })
+  }),
+  high: Object.freeze({
+    normal: Object.freeze({
+      1: 100,
+      2: 100,
+      3: 75,
+      4: 55,
+      5: 30,
+      6: 2.75,
+      7: 0
+    }),
+    trina: Object.freeze({
+      1: 100,
+      2: 100,
+      3: 100,
+      4: 75,
+      5: 42,
+      6: 4.5,
+      7: 0
+    })
+  })
 });
 
-const CLASS_LABELS={
-  low:"Low Class",
-  middle:"Middle Class",
-  high:"High Class"
+const CLASS_LABELS = Object.freeze({
+  low: "Low Class",
+  middle: "Middle Class",
+  high: "High Class"
+});
+
+const INVENTORY_SIZE = 28;
+
+const inventoryItems = [];
+let nextInventoryUid = 1;
+
+const state = {
+  selectedSearchItem: null,
+  selectedInventoryItemUid: null,
+  forgeInputUid: null,
+  hasBus: false,
+  hasTrina: false,
+  outputPreviewItem: null,
+  isRolling: false
 };
 
-const INVENTORY_SIZE=28;
-const inventoryItems=[];
-let nextInventoryUid=1;
+const itemSearchInput = document.getElementById("itemSearchInput");
+const searchResults = document.getElementById("searchResults");
+const previewEmpty = document.getElementById("previewEmpty");
+const previewContent = document.getElementById("previewContent");
+const previewIcon = document.getElementById("previewIcon");
+const previewName = document.getElementById("previewName");
+const addToInventoryBtn = document.getElementById("addToInventoryBtn");
 
-const state={
-  selectedSearchItem:null,
-  forgeInputUid:null,
-  hasBus:false,
-  hasTrina:false
-};
+const inventoryGrid = document.getElementById("inventoryGrid");
+const inputItemSlot = document.getElementById("inputItemSlot");
+const busSlot = document.getElementById("busSlot");
+const trinaSlot = document.getElementById("trinaSlot");
+const outputItemSlot = document.getElementById("outputItemSlot");
 
-const itemSearchInput=document.getElementById("itemSearchInput");
-const searchResults=document.getElementById("searchResults");
-const inventoryGrid=document.getElementById("inventoryGrid");
-const inputItemSlot=document.getElementById("inputItemSlot");
+const placeBusBtn = document.getElementById("placeBusBtn");
+const placeTrinaBtn = document.getElementById("placeTrinaBtn");
+const upgradeBtn = document.getElementById("upgradeBtn");
+const clearForgeBtn = document.getElementById("clearForgeBtn");
 
-function getClassLabel(c){
-  return CLASS_LABELS[c]||"High Class";
+const statusText = document.getElementById("statusText");
+const rateText = document.getElementById("rateText");
+
+const successEffect = document.getElementById("successEffect");
+const failEffect = document.getElementById("failEffect");
+
+function setStatus(text) {
+  statusText.textContent = text;
 }
 
-function createInventoryIcon(item){
-  const el=document.createElement("div");
-  el.className="inventory-item";
-  el.style.backgroundImage=`url("${item.icon}")`;
+function setRate(text) {
+  rateText.textContent = text;
+}
+
+function getClassLabel(itemClass) {
+  return CLASS_LABELS[itemClass] || "High Class";
+}
+
+function formatPercent(value) {
+  if (value >= 10) return value.toFixed(1).replace(".0", "");
+  if (value >= 1) return value.toFixed(2).replace(/0+$/, "").replace(/\.$/, "");
+  return value.toFixed(3).replace(/0+$/, "").replace(/\.$/, "");
+}
+
+function getRateTable(itemClass, hasTrina) {
+  const classRates = UPGRADE_RATES[itemClass] || UPGRADE_RATES.high;
+  return hasTrina ? classRates.trina : classRates.normal;
+}
+
+function getBaseRate(item, hasTrina) {
+  const table = getRateTable(item.itemClass, hasTrina);
+  return table[item.level] ?? 0;
+}
+
+function getFinalRate(item, hasTrina) {
+  return getBaseRate(item, hasTrina);
+}
+
+function rollSuccess(rate) {
+  return Math.random() * 100 < rate;
+}
+
+function clearElement(el) {
+  while (el.firstChild) {
+    el.removeChild(el.firstChild);
+  }
+}
+
+function createSlotIcon(iconPath, title, large = false) {
+  const el = document.createElement("div");
+  el.className = `slot-item-icon${large ? " slot-item-icon--large" : ""}`;
+  el.style.backgroundImage = `url("${iconPath}")`;
+  el.title = title;
   return el;
 }
 
-function createLevelTag(level){
-  const tag=document.createElement("div");
-  tag.className="item-level-tag";
-  tag.textContent=`+${level}`;
+function createInventoryIcon(item, disabled = false) {
+  const el = document.createElement("div");
+  el.className = `inventory-item${disabled ? " is-disabled" : ""}`;
+  el.style.backgroundImage = `url("${item.icon}")`;
+  el.title = `${item.name} +${item.level} | ${getClassLabel(item.itemClass)}`;
+  return el;
+}
+
+function createLevelTag(level) {
+  const tag = document.createElement("div");
+  tag.className = "item-level-tag";
+  tag.textContent = `+${level}`;
   return tag;
 }
 
-function clearElement(el){
-  while(el.firstChild) el.removeChild(el.firstChild);
+function createClassTag(itemClass) {
+  const tag = document.createElement("div");
+  tag.className = `item-class-tag item-class-tag--${itemClass}`;
+  tag.textContent = getClassLabel(itemClass);
+  return tag;
 }
 
-/* ITEM ARAMA */
+function playEffect(type) {
+  const target = type === "success" ? successEffect : failEffect;
+  target.classList.remove("is-playing");
+  void target.offsetWidth;
+  target.classList.add("is-playing");
+}
 
-function renderSearchResults(filter=""){
+function findInventoryItem(uid) {
+  return inventoryItems.find(item => item.uid === uid) || null;
+}
+
+function getForgeInputItem() {
+  return findInventoryItem(state.forgeInputUid);
+}
+
+function hasEmptyInventorySlot() {
+  return inventoryItems.length < INVENTORY_SIZE;
+}
+
+function pushToInventory(baseItem, level = 1) {
+  if (!hasEmptyInventorySlot()) {
+    return false;
+  }
+
+  inventoryItems.push({
+    uid: `inv_${nextInventoryUid++}`,
+    itemId: baseItem.id,
+    name: baseItem.name,
+    icon: baseItem.icon,
+    itemClass: baseItem.itemClass || "high",
+    maxUpgrade: baseItem.maxUpgrade ?? 7,
+    level
+  });
+
+  return true;
+}
+
+function removeInventoryItem(uid) {
+  const index = inventoryItems.findIndex(item => item.uid === uid);
+  if (index !== -1) {
+    inventoryItems.splice(index, 1);
+  }
+}
+
+function renderSearchResults(filterText = "") {
   clearElement(searchResults);
 
-  const query=filter.toLowerCase();
-
-  const filtered=ITEM_DATABASE.filter(i =>
-    i.name.toLowerCase().includes(query)
+  const query = filterText.trim().toLowerCase();
+  const filtered = ITEM_DATABASE.filter(item =>
+    item.name.toLowerCase().includes(query)
   );
 
-  filtered.forEach(item=>{
-    const row=document.createElement("div");
-    row.className="search-result-item";
+  if (!filtered.length) {
+    const empty = document.createElement("div");
+    empty.className = "search-result-item";
+    empty.textContent = "Sonuç bulunamadı.";
+    searchResults.appendChild(empty);
+    return;
+  }
 
-    const name=document.createElement("div");
-    name.textContent=item.name;
+  filtered.forEach(item => {
+    const row = document.createElement("div");
+    row.className = "search-result-item";
 
-    const meta=document.createElement("div");
-    meta.textContent=`${getClassLabel(item.itemClass)} • MAX +${item.maxUpgrade}`;
+    const name = document.createElement("div");
+    name.className = "search-result-name";
+    name.textContent = item.name;
+
+    const meta = document.createElement("div");
+    meta.className = `search-result-meta search-result-meta--${item.itemClass}`;
+    meta.textContent = `${getClassLabel(item.itemClass)} • max +${item.maxUpgrade}`;
 
     row.appendChild(name);
     row.appendChild(meta);
 
-    row.onclick=()=>{
-      state.selectedSearchItem=item;
-      addItemToInventory(item);
-    };
+    row.addEventListener("click", () => {
+      state.selectedSearchItem = item;
+      renderPreview();
+      setStatus(`${item.name} (${getClassLabel(item.itemClass)}) seçildi. İstersen envantere +1 olarak ekle.`);
+    });
 
     searchResults.appendChild(row);
   });
 }
 
-/* ENVANTER */
+function renderPreview() {
+  if (!state.selectedSearchItem) {
+    previewEmpty.classList.remove("hidden");
+    previewContent.classList.add("hidden");
+    return;
+  }
 
-function addItemToInventory(base){
-  if(inventoryItems.length>=INVENTORY_SIZE) return;
+  previewEmpty.classList.add("hidden");
+  previewContent.classList.remove("hidden");
 
-  inventoryItems.push({
-    uid:"inv_"+nextInventoryUid++,
-    name:base.name,
-    icon:base.icon,
-    itemClass:base.itemClass,
-    level:1,
-    maxUpgrade:base.maxUpgrade
-  });
+  previewIcon.style.backgroundImage = `url("${state.selectedSearchItem.icon}")`;
+  previewName.textContent = state.selectedSearchItem.name;
 
-  renderInventory();
+  const previewLevel = document.querySelector(".preview-level");
+  if (previewLevel) {
+    previewLevel.textContent = `${getClassLabel(state.selectedSearchItem.itemClass)} • Başlangıç seviyesi: +1 • Max: +${state.selectedSearchItem.maxUpgrade}`;
+  }
 }
 
-function renderInventory(){
+function renderInventory() {
   clearElement(inventoryGrid);
 
-  inventoryItems.forEach(item=>{
-    const slot=document.createElement("div");
-    slot.className="inventory-slot";
+  for (let i = 0; i < INVENTORY_SIZE; i++) {
+    const slot = document.createElement("div");
+    slot.className = "inventory-slot";
 
-    const icon=createInventoryIcon(item);
+    const item = inventoryItems[i];
 
-    icon.onclick=()=>{
-      state.forgeInputUid=item.uid;
-      renderForge();
-    };
+    if (item) {
+      if (state.selectedInventoryItemUid === item.uid) {
+        slot.classList.add("is-selected");
+      }
 
-    slot.appendChild(icon);
-    slot.appendChild(createLevelTag(item.level));
+      const disabled = state.forgeInputUid === item.uid;
+      const icon = createInventoryIcon(item, disabled);
 
-    /* CLASS ETİKETİ BİLEREK EKLENMEDİ */
+      icon.addEventListener("click", () => {
+        if (state.isRolling) return;
+        if (state.outputPreviewItem) {
+          setStatus("Çıkış slotundaki işlem tamamlanmadan yeni item seçemezsin.");
+          return;
+        }
+
+        if (state.forgeInputUid === item.uid) {
+          setStatus("Bu item zaten giriş slotunda.");
+          return;
+        }
+
+        state.selectedInventoryItemUid = item.uid;
+        state.forgeInputUid = item.uid;
+        state.outputPreviewItem = null;
+        state.hasBus = false;
+        state.hasTrina = false;
+
+        renderAll();
+        setStatus(`${item.name} +${item.level} (${getClassLabel(item.itemClass)}) giriş slotuna yerleştirildi.`);
+      });
+
+      slot.appendChild(icon);
+      slot.appendChild(createLevelTag(item.level));
+      slot.appendChild(createClassTag(item.itemClass));
+    }
 
     inventoryGrid.appendChild(slot);
-  });
+  }
 }
 
-/* ANVIL */
-
-function renderForge(){
+function renderForgeSlots() {
   clearElement(inputItemSlot);
+  clearElement(busSlot);
+  clearElement(trinaSlot);
+  clearElement(outputItemSlot);
 
-  const item=inventoryItems.find(i=>i.uid===state.forgeInputUid);
-  if(!item) return;
+  const forgeItem = getForgeInputItem();
 
-  const icon=document.createElement("div");
-  icon.className="slot-item-icon";
-  icon.style.backgroundImage=`url("${item.icon}")`;
+  if (forgeItem) {
+    inputItemSlot.appendChild(
+      createSlotIcon(forgeItem.icon, `${forgeItem.name} +${forgeItem.level} | ${getClassLabel(forgeItem.itemClass)}`, true)
+    );
+  }
 
-  inputItemSlot.appendChild(icon);
+  if (state.hasBus) {
+    busSlot.appendChild(
+      createSlotIcon("img/itemicon/bus.png", "Blessed Upgrade Scroll")
+    );
+  }
+
+  if (state.hasTrina) {
+    trinaSlot.appendChild(
+      createSlotIcon("img/itemicon/trina.png", "Trina's Piece")
+    );
+  }
+
+  if (state.outputPreviewItem) {
+    outputItemSlot.appendChild(
+      createSlotIcon(
+        state.outputPreviewItem.icon,
+        `${state.outputPreviewItem.name} +${state.outputPreviewItem.level} | ${getClassLabel(state.outputPreviewItem.itemClass)}`,
+        true
+      )
+    );
+  }
+
+  updateRateText();
 }
 
-/* INPUT */
+function updateRateText() {
+  const item = getForgeInputItem();
 
-itemSearchInput.addEventListener("input",e=>{
+  if (!item) {
+    setRate("Başarı oranı: -");
+    return;
+  }
+
+  if (item.level >= item.maxUpgrade) {
+    setRate(`${getClassLabel(item.itemClass)} • son seviye (+${item.maxUpgrade})`);
+    return;
+  }
+
+  const rate = getFinalRate(item, state.hasTrina);
+
+  if (rate <= 0) {
+    setRate(`${getClassLabel(item.itemClass)} • +${item.level} → +${item.level + 1} upgrade kapalı`);
+    return;
+  }
+
+  setRate(`${getClassLabel(item.itemClass)} • +${item.level} → +${item.level + 1} başarı oranı: %${formatPercent(rate)}`);
+}
+
+function renderAll() {
+  renderPreview();
+  renderInventory();
+  renderForgeSlots();
+}
+
+function handleAddToInventory() {
+  if (!state.selectedSearchItem) {
+    setStatus("Önce aramadan bir item seç.");
+    return;
+  }
+
+  const ok = pushToInventory(state.selectedSearchItem, 1);
+
+  if (!ok) {
+    setStatus("Envanter dolu.");
+    return;
+  }
+
+  renderInventory();
+  setStatus(`${state.selectedSearchItem.name} +1 (${getClassLabel(state.selectedSearchItem.itemClass)}) envantere eklendi.`);
+}
+
+function handlePlaceBus() {
+  if (state.isRolling) return;
+
+  const item = getForgeInputItem();
+
+  if (!item) {
+    setStatus("Önce giriş slotuna bir item koy.");
+    return;
+  }
+
+  state.hasBus = true;
+  renderForgeSlots();
+  setStatus(`BUS yerleştirildi. ${getClassLabel(item.itemClass)} oranları kullanılacak.`);
+}
+
+function handlePlaceTrina() {
+  if (state.isRolling) return;
+
+  const item = getForgeInputItem();
+
+  if (!item) {
+    setStatus("Önce giriş slotuna bir item koy.");
+    return;
+  }
+
+  if (!state.hasBus) {
+    setStatus("Önce BUS yerleştirmen gerekiyor.");
+    return;
+  }
+
+  state.hasTrina = true;
+  renderForgeSlots();
+  setStatus(`Trina yerleştirildi. ${getClassLabel(item.itemClass)} için trinalı oranlar aktif.`);
+}
+
+function handleClearForge() {
+  if (state.isRolling) return;
+
+  state.selectedInventoryItemUid = null;
+  state.forgeInputUid = null;
+  state.hasBus = false;
+  state.hasTrina = false;
+  state.outputPreviewItem = null;
+
+  renderAll();
+  setStatus("Anvil temizlendi.");
+}
+
+function setButtonsDisabled(disabled) {
+  placeBusBtn.disabled = disabled;
+  placeTrinaBtn.disabled = disabled;
+  upgradeBtn.disabled = disabled;
+  clearForgeBtn.disabled = disabled;
+  addToInventoryBtn.disabled = disabled;
+}
+
+function handleUpgrade() {
+  if (state.isRolling) return;
+
+  const inputItem = getForgeInputItem();
+
+  if (!inputItem) {
+    setStatus("Önce giriş slotuna bir item koy.");
+    return;
+  }
+
+  if (!state.hasBus) {
+    setStatus("Upgrade için BUS gerekli.");
+    return;
+  }
+
+  if (inputItem.level >= inputItem.maxUpgrade) {
+    setStatus(`Bu item son seviyede. Max: +${inputItem.maxUpgrade}`);
+    return;
+  }
+
+  const oldLevel = inputItem.level;
+  const chance = getFinalRate(inputItem, state.hasTrina);
+
+  if (chance <= 0) {
+    setStatus(`+${oldLevel} → +${oldLevel + 1} upgrade kapalı.`);
+    return;
+  }
+
+  state.isRolling = true;
+  setButtonsDisabled(true);
+  setStatus(`${inputItem.name} +${oldLevel} (${getClassLabel(inputItem.itemClass)}) upgrade ediliyor...`);
+
+  setTimeout(() => {
+    const success = rollSuccess(chance);
+
+    if (success) {
+      const resultItem = {
+        ...inputItem,
+        level: oldLevel + 1
+      };
+
+      removeInventoryItem(inputItem.uid);
+
+      state.forgeInputUid = null;
+      state.selectedInventoryItemUid = null;
+      state.hasBus = false;
+      state.hasTrina = false;
+      state.outputPreviewItem = resultItem;
+
+      playEffect("success");
+      renderAll();
+      setStatus(`${resultItem.name} +${oldLevel} → +${resultItem.level} başarılı. Çıkış slotunda gösteriliyor.`);
+
+      setTimeout(() => {
+        pushToInventory(resultItem, resultItem.level);
+        state.outputPreviewItem = null;
+        renderAll();
+        setStatus(`${resultItem.name} +${resultItem.level} envantere düştü.`);
+        state.isRolling = false;
+        setButtonsDisabled(false);
+      }, 1200);
+
+      return;
+    }
+
+    removeInventoryItem(inputItem.uid);
+
+    state.forgeInputUid = null;
+    state.selectedInventoryItemUid = null;
+    state.hasBus = false;
+    state.hasTrina = false;
+    state.outputPreviewItem = null;
+
+    playEffect("fail");
+    renderAll();
+    setStatus(`${inputItem.name} +${oldLevel} yandı. Item kayboldu. ${getClassLabel(inputItem.itemClass)} oranı: %${formatPercent(chance)}`);
+
+    state.isRolling = false;
+    setButtonsDisabled(false);
+  }, 900);
+}
+
+itemSearchInput.addEventListener("input", e => {
   renderSearchResults(e.target.value);
 });
 
-/* INIT */
+addToInventoryBtn.addEventListener("click", handleAddToInventory);
+placeBusBtn.addEventListener("click", handlePlaceBus);
+placeTrinaBtn.addEventListener("click", handlePlaceTrina);
+upgradeBtn.addEventListener("click", handleUpgrade);
+clearForgeBtn.addEventListener("click", handleClearForge);
 
 renderSearchResults("");
-renderInventory();
+renderAll();
+setStatus("Bir item seçip envantere ekle.");

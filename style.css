@@ -223,14 +223,14 @@ body {
 }
 
 .forge-slot--item {
-  width: 150px;
-  height: 150px;
+  width: 110px;
+  height: 110px;
   border-radius: 18px;
 }
 
 .forge-slot--small {
-  width: 45px;
-  height: 45px;
+  width: 55px;
+  height: 55px;
   border-radius: 10px;
 }
 

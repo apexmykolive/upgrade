@@ -492,7 +492,7 @@ placeTrinaBtn.addEventListener("click", handlePlaceTrina);
 upgradeBtn.addEventListener("click", handleUpgrade);
 clearForgeBtn.addEventListener("click", handleClearForge);
 
-seedInitialItems();
+
 renderSearchResults("");
 renderAll();
 setStatus("Bir item seçip envantere ekle.");

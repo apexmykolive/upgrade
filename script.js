@@ -1,22 +1,72 @@
 const UPGRADE_RATES = Object.freeze({
-  normal: Object.freeze({
-    1: 100,   // +1 -> +2
-    2: 100,   // +2 -> +3
-    3: 75,    // +3 -> +4
-    4: 55,    // +4 -> +5
-    5: 30,    // +5 -> +6
-    6: 2.75,  // +6 -> +7
-    7: 0      // +7 -> +8 kapalı
+  low: Object.freeze({
+    normal: Object.freeze({
+      1: 100,
+      2: 100,
+      3: 80,
+      4: 70,
+      5: 40,
+      6: 8,
+      7: 2.5
+    }),
+    trina: Object.freeze({
+      1: 100,
+      2: 100,
+      3: 100,
+      4: 85,
+      5: 60,
+      6: 17.5,
+      7: 10
+    })
   }),
-  trina: Object.freeze({
-    1: 100,   // +1 -> +2
-    2: 100,   // +2 -> +3
-    3: 100,   // +3 -> +4
-    4: 75,    // +4 -> +5
-    5: 42,    // +5 -> +6
-    6: 4.5,   // +6 -> +7
-    7: 0      // +7 -> +8 kapalı
+  middle: Object.freeze({
+    normal: Object.freeze({
+      1: 100,
+      2: 100,
+      3: 80,
+      4: 60,
+      5: 40,
+      6: 8,
+      7: 3,
+      8: 0
+    }),
+    trina: Object.freeze({
+      1: 100,
+      2: 100,
+      3: 100,
+      4: 80,
+      5: 55,
+      6: 15,
+      7: 5,
+      8: 0
+    })
+  }),
+  high: Object.freeze({
+    normal: Object.freeze({
+      1: 100,
+      2: 100,
+      3: 75,
+      4: 55,
+      5: 30,
+      6: 2.75,
+      7: 0
+    }),
+    trina: Object.freeze({
+      1: 100,
+      2: 100,
+      3: 100,
+      4: 75,
+      5: 42,
+      6: 4.5,
+      7: 0
+    })
   })
+});
+
+const CLASS_LABELS = Object.freeze({
+  low: "Low Class",
+  middle: "Middle Class",
+  high: "High Class"
 });
 
 const INVENTORY_SIZE = 28;
@@ -67,19 +117,28 @@ function setRate(text) {
   rateText.textContent = text;
 }
 
+function getClassLabel(itemClass) {
+  return CLASS_LABELS[itemClass] || "High Class";
+}
+
 function formatPercent(value) {
   if (value >= 10) return value.toFixed(1).replace(".0", "");
   if (value >= 1) return value.toFixed(2).replace(/0+$/, "").replace(/\.$/, "");
   return value.toFixed(3).replace(/0+$/, "").replace(/\.$/, "");
 }
 
-function getBaseRate(level, hasTrina) {
-  const table = hasTrina ? UPGRADE_RATES.trina : UPGRADE_RATES.normal;
-  return table[level] ?? 0;
+function getRateTable(itemClass, hasTrina) {
+  const classRates = UPGRADE_RATES[itemClass] || UPGRADE_RATES.high;
+  return hasTrina ? classRates.trina : classRates.normal;
 }
 
-function getFinalRate(level, hasTrina) {
-  return getBaseRate(level, hasTrina);
+function getBaseRate(item, hasTrina) {
+  const table = getRateTable(item.itemClass, hasTrina);
+  return table[item.level] ?? 0;
+}
+
+function getFinalRate(item, hasTrina) {
+  return getBaseRate(item, hasTrina);
 }
 
 function rollSuccess(rate) {
@@ -104,7 +163,7 @@ function createInventoryIcon(item, disabled = false) {
   const el = document.createElement("div");
   el.className = `inventory-item${disabled ? " is-disabled" : ""}`;
   el.style.backgroundImage = `url("${item.icon}")`;
-  el.title = `${item.name} +${item.level}`;
+  el.title = `${item.name} +${item.level} | ${getClassLabel(item.itemClass)}`;
   return el;
 }
 
@@ -112,6 +171,13 @@ function createLevelTag(level) {
   const tag = document.createElement("div");
   tag.className = "item-level-tag";
   tag.textContent = `+${level}`;
+  return tag;
+}
+
+function createClassTag(itemClass) {
+  const tag = document.createElement("div");
+  tag.className = `item-class-tag item-class-tag--${itemClass}`;
+  tag.textContent = getClassLabel(itemClass);
   return tag;
 }
 
@@ -144,7 +210,8 @@ function pushToInventory(baseItem, level = 1) {
     itemId: baseItem.id,
     name: baseItem.name,
     icon: baseItem.icon,
-    maxUpgrade: baseItem.maxUpgrade ?? 8,
+    itemClass: baseItem.itemClass || "high",
+    maxUpgrade: baseItem.maxUpgrade ?? 7,
     level
   });
 
@@ -177,12 +244,22 @@ function renderSearchResults(filterText = "") {
   filtered.forEach(item => {
     const row = document.createElement("div");
     row.className = "search-result-item";
-    row.textContent = item.name;
+
+    const name = document.createElement("div");
+    name.className = "search-result-name";
+    name.textContent = item.name;
+
+    const meta = document.createElement("div");
+    meta.className = `search-result-meta search-result-meta--${item.itemClass}`;
+    meta.textContent = `${getClassLabel(item.itemClass)} • max +${item.maxUpgrade}`;
+
+    row.appendChild(name);
+    row.appendChild(meta);
 
     row.addEventListener("click", () => {
       state.selectedSearchItem = item;
       renderPreview();
-      setStatus(`${item.name} seçildi. İstersen envantere +1 olarak ekle.`);
+      setStatus(`${item.name} (${getClassLabel(item.itemClass)}) seçildi. İstersen envantere +1 olarak ekle.`);
     });
 
     searchResults.appendChild(row);
@@ -201,6 +278,11 @@ function renderPreview() {
 
   previewIcon.style.backgroundImage = `url("${state.selectedSearchItem.icon}")`;
   previewName.textContent = state.selectedSearchItem.name;
+
+  const previewLevel = document.querySelector(".preview-level");
+  if (previewLevel) {
+    previewLevel.textContent = `${getClassLabel(state.selectedSearchItem.itemClass)} • Başlangıç seviyesi: +1 • Max: +${state.selectedSearchItem.maxUpgrade}`;
+  }
 }
 
 function renderInventory() {
@@ -239,11 +321,12 @@ function renderInventory() {
         state.hasTrina = false;
 
         renderAll();
-        setStatus(`${item.name} +${item.level} giriş slotuna yerleştirildi.`);
+        setStatus(`${item.name} +${item.level} (${getClassLabel(item.itemClass)}) giriş slotuna yerleştirildi.`);
       });
 
       slot.appendChild(icon);
       slot.appendChild(createLevelTag(item.level));
+      slot.appendChild(createClassTag(item.itemClass));
     }
 
     inventoryGrid.appendChild(slot);
@@ -260,7 +343,7 @@ function renderForgeSlots() {
 
   if (forgeItem) {
     inputItemSlot.appendChild(
-      createSlotIcon(forgeItem.icon, `${forgeItem.name} +${forgeItem.level}`, true)
+      createSlotIcon(forgeItem.icon, `${forgeItem.name} +${forgeItem.level} | ${getClassLabel(forgeItem.itemClass)}`, true)
     );
   }
 
@@ -280,7 +363,7 @@ function renderForgeSlots() {
     outputItemSlot.appendChild(
       createSlotIcon(
         state.outputPreviewItem.icon,
-        `${state.outputPreviewItem.name} +${state.outputPreviewItem.level}`,
+        `${state.outputPreviewItem.name} +${state.outputPreviewItem.level} | ${getClassLabel(state.outputPreviewItem.itemClass)}`,
         true
       )
     );
@@ -298,18 +381,18 @@ function updateRateText() {
   }
 
   if (item.level >= item.maxUpgrade) {
-    setRate("Başarı oranı: son seviye");
+    setRate(`${getClassLabel(item.itemClass)} • son seviye (+${item.maxUpgrade})`);
     return;
   }
 
-  const rate = getFinalRate(item.level, state.hasTrina);
+  const rate = getFinalRate(item, state.hasTrina);
 
   if (rate <= 0) {
-    setRate(`+${item.level} → +${item.level + 1} upgrade kapalı`);
+    setRate(`${getClassLabel(item.itemClass)} • +${item.level} → +${item.level + 1} upgrade kapalı`);
     return;
   }
 
-  setRate(`+${item.level} → +${item.level + 1} başarı oranı: %${formatPercent(rate)}`);
+  setRate(`${getClassLabel(item.itemClass)} • +${item.level} → +${item.level + 1} başarı oranı: %${formatPercent(rate)}`);
 }
 
 function renderAll() {
@@ -332,7 +415,7 @@ function handleAddToInventory() {
   }
 
   renderInventory();
-  setStatus(`${state.selectedSearchItem.name} +1 envantere eklendi.`);
+  setStatus(`${state.selectedSearchItem.name} +1 (${getClassLabel(state.selectedSearchItem.itemClass)}) envantere eklendi.`);
 }
 
 function handlePlaceBus() {
@@ -347,7 +430,7 @@ function handlePlaceBus() {
 
   state.hasBus = true;
   renderForgeSlots();
-  setStatus("BUS yerleştirildi.");
+  setStatus(`BUS yerleştirildi. ${getClassLabel(item.itemClass)} oranları kullanılacak.`);
 }
 
 function handlePlaceTrina() {
@@ -367,7 +450,7 @@ function handlePlaceTrina() {
 
   state.hasTrina = true;
   renderForgeSlots();
-  setStatus("Trina yerleştirildi.");
+  setStatus(`Trina yerleştirildi. ${getClassLabel(item.itemClass)} için trinalı oranlar aktif.`);
 }
 
 function handleClearForge() {
@@ -407,12 +490,12 @@ function handleUpgrade() {
   }
 
   if (inputItem.level >= inputItem.maxUpgrade) {
-    setStatus("Bu item daha fazla upgrade edilemez.");
+    setStatus(`Bu item son seviyede. Max: +${inputItem.maxUpgrade}`);
     return;
   }
 
   const oldLevel = inputItem.level;
-  const chance = getFinalRate(oldLevel, state.hasTrina);
+  const chance = getFinalRate(inputItem, state.hasTrina);
 
   if (chance <= 0) {
     setStatus(`+${oldLevel} → +${oldLevel + 1} upgrade kapalı.`);
@@ -421,7 +504,7 @@ function handleUpgrade() {
 
   state.isRolling = true;
   setButtonsDisabled(true);
-  setStatus(`${inputItem.name} +${oldLevel} upgrade ediliyor...`);
+  setStatus(`${inputItem.name} +${oldLevel} (${getClassLabel(inputItem.itemClass)}) upgrade ediliyor...`);
 
   setTimeout(() => {
     const success = rollSuccess(chance);
@@ -442,9 +525,7 @@ function handleUpgrade() {
 
       playEffect("success");
       renderAll();
-      setStatus(
-        `${resultItem.name} +${oldLevel} → +${resultItem.level} başarılı. Çıkış slotunda gösteriliyor.`
-      );
+      setStatus(`${resultItem.name} +${oldLevel} → +${resultItem.level} başarılı. Çıkış slotunda gösteriliyor.`);
 
       setTimeout(() => {
         pushToInventory(resultItem, resultItem.level);
@@ -468,18 +549,11 @@ function handleUpgrade() {
 
     playEffect("fail");
     renderAll();
-    setStatus(
-      `${inputItem.name} +${oldLevel} yandı. Item kayboldu. Oran: %${formatPercent(chance)}`
-    );
+    setStatus(`${inputItem.name} +${oldLevel} yandı. Item kayboldu. ${getClassLabel(inputItem.itemClass)} oranı: %${formatPercent(chance)}`);
 
     state.isRolling = false;
     setButtonsDisabled(false);
   }, 900);
-}
-
-function seedInitialItems() {
-  const starters = ITEM_DATABASE.slice(0, 6);
-  starters.forEach(item => pushToInventory(item, 1));
 }
 
 itemSearchInput.addEventListener("input", e => {
@@ -491,7 +565,6 @@ placeBusBtn.addEventListener("click", handlePlaceBus);
 placeTrinaBtn.addEventListener("click", handlePlaceTrina);
 upgradeBtn.addEventListener("click", handleUpgrade);
 clearForgeBtn.addEventListener("click", handleClearForge);
-
 
 renderSearchResults("");
 renderAll();

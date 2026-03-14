@@ -163,7 +163,7 @@ function createInventoryIcon(item, disabled = false) {
   const el = document.createElement("div");
   el.className = `inventory-item${disabled ? " is-disabled" : ""}`;
   el.style.backgroundImage = `url("${item.icon}")`;
-  el.title = `${item.name} +${item.level} | ${getClassLabel(item.itemClass)}`;
+  el.title = `${item.name} +${item.level}`;
   return el;
 }
 
@@ -171,13 +171,6 @@ function createLevelTag(level) {
   const tag = document.createElement("div");
   tag.className = "item-level-tag";
   tag.textContent = `+${level}`;
-  return tag;
-}
-
-function createClassTag(itemClass) {
-  const tag = document.createElement("div");
-  tag.className = `item-class-tag item-class-tag--${itemClass}`;
-  tag.textContent = getClassLabel(itemClass);
   return tag;
 }
 
@@ -244,22 +237,12 @@ function renderSearchResults(filterText = "") {
   filtered.forEach(item => {
     const row = document.createElement("div");
     row.className = "search-result-item";
-
-    const name = document.createElement("div");
-    name.className = "search-result-name";
-    name.textContent = item.name;
-
-    const meta = document.createElement("div");
-    meta.className = `search-result-meta search-result-meta--${item.itemClass}`;
-    meta.textContent = `${getClassLabel(item.itemClass)} • max +${item.maxUpgrade}`;
-
-    row.appendChild(name);
-    row.appendChild(meta);
+    row.textContent = item.name;
 
     row.addEventListener("click", () => {
       state.selectedSearchItem = item;
       renderPreview();
-      setStatus(`${item.name} (${getClassLabel(item.itemClass)}) seçildi. İstersen envantere +1 olarak ekle.`);
+      setStatus(`${item.name} seçildi. İstersen envantere +1 olarak ekle.`);
     });
 
     searchResults.appendChild(row);
@@ -281,7 +264,7 @@ function renderPreview() {
 
   const previewLevel = document.querySelector(".preview-level");
   if (previewLevel) {
-    previewLevel.textContent = `${getClassLabel(state.selectedSearchItem.itemClass)} • Başlangıç seviyesi: +1 • Max: +${state.selectedSearchItem.maxUpgrade}`;
+    previewLevel.textContent = `Başlangıç seviyesi: +1 • Max: +${state.selectedSearchItem.maxUpgrade}`;
   }
 }
 
@@ -321,12 +304,11 @@ function renderInventory() {
         state.hasTrina = false;
 
         renderAll();
-        setStatus(`${item.name} +${item.level} (${getClassLabel(item.itemClass)}) giriş slotuna yerleştirildi.`);
+        setStatus(`${item.name} +${item.level} giriş slotuna yerleştirildi.`);
       });
 
       slot.appendChild(icon);
       slot.appendChild(createLevelTag(item.level));
-      slot.appendChild(createClassTag(item.itemClass));
     }
 
     inventoryGrid.appendChild(slot);
@@ -343,7 +325,7 @@ function renderForgeSlots() {
 
   if (forgeItem) {
     inputItemSlot.appendChild(
-      createSlotIcon(forgeItem.icon, `${forgeItem.name} +${forgeItem.level} | ${getClassLabel(forgeItem.itemClass)}`, true)
+      createSlotIcon(forgeItem.icon, `${forgeItem.name} +${forgeItem.level}`, true)
     );
   }
 
@@ -363,7 +345,7 @@ function renderForgeSlots() {
     outputItemSlot.appendChild(
       createSlotIcon(
         state.outputPreviewItem.icon,
-        `${state.outputPreviewItem.name} +${state.outputPreviewItem.level} | ${getClassLabel(state.outputPreviewItem.itemClass)}`,
+        `${state.outputPreviewItem.name} +${state.outputPreviewItem.level}`,
         true
       )
     );
@@ -381,18 +363,18 @@ function updateRateText() {
   }
 
   if (item.level >= item.maxUpgrade) {
-    setRate(`${getClassLabel(item.itemClass)} • son seviye (+${item.maxUpgrade})`);
+    setRate(`Son seviye (+${item.maxUpgrade})`);
     return;
   }
 
   const rate = getFinalRate(item, state.hasTrina);
 
   if (rate <= 0) {
-    setRate(`${getClassLabel(item.itemClass)} • +${item.level} → +${item.level + 1} upgrade kapalı`);
+    setRate(`+${item.level} → +${item.level + 1} upgrade kapalı`);
     return;
   }
 
-  setRate(`${getClassLabel(item.itemClass)} • +${item.level} → +${item.level + 1} başarı oranı: %${formatPercent(rate)}`);
+  setRate(`+${item.level} → +${item.level + 1} başarı oranı: %${formatPercent(rate)}`);
 }
 
 function renderAll() {
@@ -415,7 +397,7 @@ function handleAddToInventory() {
   }
 
   renderInventory();
-  setStatus(`${state.selectedSearchItem.name} +1 (${getClassLabel(state.selectedSearchItem.itemClass)}) envantere eklendi.`);
+  setStatus(`${state.selectedSearchItem.name} +1 envantere eklendi.`);
 }
 
 function handlePlaceBus() {
@@ -430,7 +412,7 @@ function handlePlaceBus() {
 
   state.hasBus = true;
   renderForgeSlots();
-  setStatus(`BUS yerleştirildi. ${getClassLabel(item.itemClass)} oranları kullanılacak.`);
+  setStatus("BUS yerleştirildi.");
 }
 
 function handlePlaceTrina() {
@@ -450,7 +432,7 @@ function handlePlaceTrina() {
 
   state.hasTrina = true;
   renderForgeSlots();
-  setStatus(`Trina yerleştirildi. ${getClassLabel(item.itemClass)} için trinalı oranlar aktif.`);
+  setStatus("Trina yerleştirildi.");
 }
 
 function handleClearForge() {
@@ -504,7 +486,7 @@ function handleUpgrade() {
 
   state.isRolling = true;
   setButtonsDisabled(true);
-  setStatus(`${inputItem.name} +${oldLevel} (${getClassLabel(inputItem.itemClass)}) upgrade ediliyor...`);
+  setStatus(`${inputItem.name} +${oldLevel} upgrade ediliyor...`);
 
   setTimeout(() => {
     const success = rollSuccess(chance);
@@ -549,7 +531,7 @@ function handleUpgrade() {
 
     playEffect("fail");
     renderAll();
-    setStatus(`${inputItem.name} +${oldLevel} yandı. Item kayboldu. ${getClassLabel(inputItem.itemClass)} oranı: %${formatPercent(chance)}`);
+    setStatus(`${inputItem.name} +${oldLevel} yandı. Item kayboldu. Oran: %${formatPercent(chance)}`);
 
     state.isRolling = false;
     setButtonsDisabled(false);

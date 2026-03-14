@@ -1,13 +1,22 @@
 const UPGRADE_RATES = Object.freeze({
-  1: 100,
-  2: 100,
-  3: 80,
-  4: 70,
-  5: 50,
-  6: 35,
-  7: 10,
-  8: 3,
-  9: 0.5
+  normal: Object.freeze({
+    1: 100,   // +1 -> +2
+    2: 100,   // +2 -> +3
+    3: 75,    // +3 -> +4
+    4: 55,    // +4 -> +5
+    5: 30,    // +5 -> +6
+    6: 2.75,  // +6 -> +7
+    7: 0      // +7 -> +8 kapalı
+  }),
+  trina: Object.freeze({
+    1: 100,   // +1 -> +2
+    2: 100,   // +2 -> +3
+    3: 100,   // +3 -> +4
+    4: 75,    // +4 -> +5
+    5: 42,    // +5 -> +6
+    6: 4.5,   // +6 -> +7
+    7: 0      // +7 -> +8 kapalı
+  })
 });
 
 const INVENTORY_SIZE = 28;
@@ -64,13 +73,13 @@ function formatPercent(value) {
   return value.toFixed(3).replace(/0+$/, "").replace(/\.$/, "");
 }
 
-function getBaseRate(level) {
-  return UPGRADE_RATES[level] ?? 0;
+function getBaseRate(level, hasTrina) {
+  const table = hasTrina ? UPGRADE_RATES.trina : UPGRADE_RATES.normal;
+  return table[level] ?? 0;
 }
 
 function getFinalRate(level, hasTrina) {
-  const base = getBaseRate(level);
-  return hasTrina ? base * 1.05 : base;
+  return getBaseRate(level, hasTrina);
 }
 
 function rollSuccess(rate) {
@@ -135,7 +144,7 @@ function pushToInventory(baseItem, level = 1) {
     itemId: baseItem.id,
     name: baseItem.name,
     icon: baseItem.icon,
-    maxUpgrade: baseItem.maxUpgrade ?? 10,
+    maxUpgrade: baseItem.maxUpgrade ?? 8,
     level
   });
 
@@ -288,10 +297,15 @@ function updateRateText() {
     return;
   }
 
+  if (item.level >= item.maxUpgrade) {
+    setRate("Başarı oranı: son seviye");
+    return;
+  }
+
   const rate = getFinalRate(item.level, state.hasTrina);
 
-  if (rate <= 0 || item.level >= item.maxUpgrade) {
-    setRate("Başarı oranı: son seviye");
+  if (rate <= 0) {
+    setRate(`+${item.level} → +${item.level + 1} upgrade kapalı`);
     return;
   }
 
@@ -346,6 +360,11 @@ function handlePlaceTrina() {
     return;
   }
 
+  if (!state.hasBus) {
+    setStatus("Önce BUS yerleştirmen gerekiyor.");
+    return;
+  }
+
   state.hasTrina = true;
   renderForgeSlots();
   setStatus("Trina yerleştirildi.");
@@ -394,6 +413,11 @@ function handleUpgrade() {
 
   const oldLevel = inputItem.level;
   const chance = getFinalRate(oldLevel, state.hasTrina);
+
+  if (chance <= 0) {
+    setStatus(`+${oldLevel} → +${oldLevel + 1} upgrade kapalı.`);
+    return;
+  }
 
   state.isRolling = true;
   setButtonsDisabled(true);

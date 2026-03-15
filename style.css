@@ -312,9 +312,141 @@ button:disabled { opacity: .55; cursor: not-allowed; }
 }
 
 @media (max-width: 1080px) {
-  .anvil-app { grid-template-columns: 1fr; }
-  .forge-flow { grid-template-columns: 1fr; }
-  .material-row { justify-content: center; }
+  .anvil-app {
+    grid-template-columns: 280px 1fr;
+    padding: 16px;
+    gap: 16px;
+  }
+
+  .forge-flow {
+    grid-template-columns: 140px 1fr 140px;
+    gap: 14px;
+  }
+
+  .forge-slot--item {
+    width: 90px;
+    height: 90px;
+  }
+
+  .slot-item-icon.slot-item-icon--large {
+    width: 60px;
+    height: 60px;
+  }
+
+  .material-row {
+    justify-content: center;
+    gap: 12px;
+  }
+
+  .forge-actions {
+    gap: 8px;
+  }
+
+  .action-btn {
+    min-width: 92px;
+    font-size: 13px;
+    padding: 0 10px;
+  }
+
+  .inventory-grid {
+    grid-template-columns: repeat(7, 40px);
+    grid-auto-rows: 40px;
+  }
+
+  .inventory-slot {
+    width: 40px;
+    height: 40px;
+  }
+
+  .inventory-item,
+  .slot-item-icon {
+    width: 34px;
+    height: 34px;
+  }
+}
+
+@media (max-width: 820px) {
+  .anvil-app {
+    grid-template-columns: 1fr;
+  }
+
+  .forge-flow {
+    grid-template-columns: 1fr;
+  }
+
+  .forge-column {
+    align-items: center;
+  }
+
+  .forge-column--materials {
+    gap: 14px;
+  }
+
+  .search-results {
+    max-height: 300px;
+  }
+}
+
+@media (max-width: 640px) {
+  .anvil-app {
+    padding: 10px;
+    gap: 12px;
+  }
+
+  .search-card,
+  .preview-card,
+  .forge-card,
+  .inventory-card {
+    padding: 12px;
+  }
+
+  .search-card__title,
+  .preview-card__title,
+  .forge-card__title,
+  .inventory-card__title {
+    font-size: 16px;
+  }
+
+  .preview-icon {
+    width: 60px;
+    height: 60px;
+  }
+
+  .preview-name {
+    font-size: 14px;
+  }
+
+  .preview-level,
+  .status-text,
+  .rate-text {
+    font-size: 12px;
+    line-height: 1.4;
+    text-align: center;
+  }
+
+  .inventory-grid {
+    grid-template-columns: repeat(7, 36px);
+    grid-auto-rows: 36px;
+    gap: 5px;
+    padding: 10px;
+  }
+
+  .inventory-slot {
+    width: 36px;
+    height: 36px;
+  }
+
+  .inventory-item,
+  .slot-item-icon {
+    width: 30px;
+    height: 30px;
+  }
+
+  .item-level-tag {
+    font-size: 9px;
+    min-width: 16px;
+    height: 12px;
+  }
 }
 body::before{
   content: "";
@@ -331,4 +463,87 @@ body::before{
   height: 100vh;
   object-fit: cover;
   z-index: -2;
+}
+.left-panel,
+.right-panel {
+  min-width: 0;
+}
+
+.search-results,
+.forge-layout,
+.status-box,
+.inventory-grid {
+  min-width: 0;
+}
+
+@media (max-width: 820px) {
+  .forge-layout {
+    min-height: auto;
+    padding: 14px;
+  }
+
+  .forge-slot--item {
+    width: 84px;
+    height: 84px;
+  }
+
+  .forge-slot--small {
+    width: 50px;
+    height: 50px;
+  }
+
+  .slot-item-icon.slot-item-icon--large {
+    width: 56px;
+    height: 56px;
+  }
+
+  .action-btn {
+    min-width: 96px;
+    height: 36px;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 640px) {
+  .search-box input {
+    height: 42px;
+    font-size: 14px;
+  }
+
+  .search-results {
+    max-height: 260px;
+  }
+
+  .forge-layout {
+    padding: 12px;
+  }
+
+  .forge-slot--item {
+    width: 76px;
+    height: 76px;
+  }
+
+  .forge-slot--small {
+    width: 46px;
+    height: 46px;
+  }
+
+  .slot-title {
+    font-size: 12px;
+  }
+
+  .material-row {
+    gap: 10px;
+  }
+
+  .forge-actions {
+    gap: 8px;
+  }
+
+  .action-btn {
+    min-width: 88px;
+    height: 34px;
+    font-size: 11px;
+    padding: 0 8px;
+  }
 }
